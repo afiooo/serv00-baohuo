@@ -54,7 +54,7 @@ try:
 except:
     loginip = "未知"
 
-content += f"\n<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
+content += f"<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
 
 push = os.getenv('PUSH')
 
