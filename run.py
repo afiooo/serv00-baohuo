@@ -5,8 +5,7 @@ import json
 from datetime import datetime, timezone, timedelta
 
 def ssh_multiple_connections(hosts_info, command):
-    users = []
-    hostnames = []
+    results = []
     for host_info in hosts_info:
         hostname = host_info['hostname']
         username = host_info['username']
@@ -17,27 +16,44 @@ def ssh_multiple_connections(hosts_info, command):
             ssh.connect(hostname=hostname, port=22, username=username, password=password)
             stdin, stdout, stderr = ssh.exec_command(command)
             user = stdout.read().decode().strip()
-            users.append(user)
-            hostnames.append(hostname)
+            results.append({
+                'status': 'success',
+                'username': user,
+                'hostname': hostname
+            })
             ssh.close()
         except Exception as e:
-            print(f"用户：{username}，连接 {hostname} 时出错: {str(e)}")
-    return users, hostnames
+            results.append({
+                'status': 'fail',
+                'username': username,
+                'hostname': hostname,
+                'error': str(e)
+            })
+    return results
 
 ssh_info_str = os.getenv('SSH_INFO', '[]')
 hosts_info = json.loads(ssh_info_str)
 
 command = 'whoami'
-user_list, hostname_list = ssh_multiple_connections(hosts_info, command)
-user_num = len(user_list)
-content = "SSH服务器登录信息：\n"
-for user, hostname in zip(user_list, hostname_list):
-    content += f"用户名：{user}，服务器：{hostname}\n"
+connection_results = ssh_multiple_connections(hosts_info, command)
+success_count = sum(1 for r in connection_results if r['status'] == 'success')
+
+content = ""
+for result in connection_results:
+    if result['status'] == 'success':
+        content += f"<b><span style='color:green'>SSH登录成功</span></b>：用户名：{result['username']}，服务器：{result['hostname']}\n"
+    else:
+        content += f"<b><span style='color:red'>SSH登录失败</span></b>：用户名：{result['username']}，服务器：{result['hostname']}，错误：{result['error']}\n"
+
 beijing_timezone = timezone(timedelta(hours=8))
 time = datetime.now(beijing_timezone).strftime('%Y-%m-%d %H:%M:%S')
-menu = requests.get('https://api.zzzwb.com/v1?get=tg').json()
-loginip = requests.get('https://api.ipify.org?format=json').json()['ip']
-content += f"本次登录用户共： {user_num} 个\n登录时间：{time}\n登录IP：{loginip}"
+
+try:
+    loginip = requests.get('https://api.ipify.org?format=json', timeout=5).json()['ip']
+except:
+    loginip = "未知"
+
+content += f"\n本次登录成功用户共： {success_count} 个\n登录时间：{time}\n登录IP：{loginip}"
 
 push = os.getenv('PUSH')
 
@@ -47,31 +63,24 @@ def mail_push(url):
         "email": os.getenv('MAIL')
     }
 
-    response = requests.post(url, json=data)
-
     try:
-        response_data = json.loads(response.text)
-        if response_data['code'] == 200:
+        response = requests.post(url, json=data)
+        response_data = response.json()
+        if response_data.get('code') == 200:
             print("推送成功")
         else:
-            print(f"推送失败，错误代码：{response_data['code']}")
-    except json.JSONDecodeError:
-        print("连接邮箱服务器失败了")
+            print(f"推送失败，错误代码：{response_data.get('code')}")
+    except Exception as e:
+        print("连接邮箱服务器失败：", e)
 
 def telegram_push(message):
     url = f"https://api.telegram.org/bot{os.getenv('TELEGRAM_BOT_TOKEN')}/sendMessage"
     payload = {
         'chat_id': os.getenv('TELEGRAM_CHAT_ID'),
         'text': message,
-        'parse_mode': 'HTML',
-        'reply_markup': json.dumps({
-            "inline_keyboard": menu,
-            "one_time_keyboard": True
-         })
+        'parse_mode': 'HTML'
     }
-    headers = {
-        'Content-Type': 'application/json'
-    }
+    headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code != 200:
         print(f"发送消息到Telegram失败: {response.text}")
