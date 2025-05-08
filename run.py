@@ -40,10 +40,10 @@ connection_results = ssh_multiple_connections(hosts_info, command)
 content = ""
 for result in connection_results:
     if result['status'] == 'success':
-        content += f"✅ <b>SSH登录成功</b>\n"
+        content += "✅ SSH登录成功\n"
         content += f"用户名：{result['username']}\n服务器：{result['hostname']}\n"
     else:
-        content += f"❌ <b>SSH登录失败</b>\n"
+        content += "❌ SSH登录失败\n"
         content += f"用户名：{result['username']}\n服务器：{result['hostname']}，错误：{result['error']}\n"
 
 beijing_timezone = timezone(timedelta(hours=8))
@@ -54,7 +54,7 @@ try:
 except:
     loginip = "未知"
 
-content += f"<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
+content += f"登录时间：{time}\n登录IP：{loginip}"
 
 push = os.getenv('PUSH')
 
