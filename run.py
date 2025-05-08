@@ -36,14 +36,15 @@ hosts_info = json.loads(ssh_info_str)
 
 command = 'whoami'
 connection_results = ssh_multiple_connections(hosts_info, command)
-success_count = sum(1 for r in connection_results if r['status'] == 'success')
 
 content = ""
 for result in connection_results:
     if result['status'] == 'success':
-        content += f"✅ <b>SSH登录成功</b>：用户名：{result['username']}，服务器：{result['hostname']}\n"
+        content += f"✅ <b>SSH登录成功</b>\n"
+        content += f"用户名：{result['username']}\n服务器：{result['hostname']}\n"
     else:
-        content += f"❌ <b>SSH登录失败</b>：用户名：{result['username']}，服务器：{result['hostname']}，错误：{result['error']}\n"
+        content += f"❌ <b>SSH登录失败</b>\n"
+        content += f"用户名：{result['username']}\n服务器：{result['hostname']}，错误：{result['error']}\n"
 
 beijing_timezone = timezone(timedelta(hours=8))
 time = datetime.now(beijing_timezone).strftime('%Y-%m-%d %H:%M:%S')
@@ -53,7 +54,7 @@ try:
 except:
     loginip = "未知"
 
-content += f"\n<b>本次登录成功用户共：</b> {success_count} 个\n<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
+content += f"\n<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
 
 push = os.getenv('PUSH')
 
