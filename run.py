@@ -41,10 +41,10 @@ content = ""
 for result in connection_results:
     if result['status'] == 'success':
         content += "✅ SSH登录成功\n"
-        content += f"用户名：{result['username']}\n服务器：{result['hostname']}"
+        content += f"用户名：{result['username']}\n服务器：`{result['hostname']}`"
     else:
         content += "❌ SSH登录失败\n"
-        content += f"用户名：{result['username']}\n服务器：{result['hostname']}，错误：{result['error']}"
+        content += f"用户名：{result['username']}\n服务器：`{result['hostname']}`，错误：{result['error']}"
 
 beijing_timezone = timezone(timedelta(hours=8))
 time = datetime.now(beijing_timezone).strftime('%Y-%m-%d %H:%M:%S')
@@ -79,7 +79,8 @@ def telegram_push(message):
     payload = {
         'chat_id': os.getenv('TELEGRAM_CHAT_ID'),
         'text': message,
-        'disable_web_page_preview': True  # 禁用链接预览，避免服务器地址被识别为链接
+        'parse_mode': 'Markdown',  # 使用 Markdown 格式，支持反引号代码块
+        'disable_web_page_preview': True  # 禁用链接预览
     }
     headers = {'Content-Type': 'application/json'}
     response = requests.post(url, json=payload, headers=headers)
