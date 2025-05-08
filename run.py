@@ -41,9 +41,9 @@ success_count = sum(1 for r in connection_results if r['status'] == 'success')
 content = ""
 for result in connection_results:
     if result['status'] == 'success':
-        content += f"<b><span style='color:green'>SSH登录成功</span></b>：用户名：{result['username']}，服务器：{result['hostname']}\n"
+        content += f"✅ <b>SSH登录成功</b>：用户名：{result['username']}，服务器：{result['hostname']}\n"
     else:
-        content += f"<b><span style='color:red'>SSH登录失败</span></b>：用户名：{result['username']}，服务器：{result['hostname']}，错误：{result['error']}\n"
+        content += f"❌ <b>SSH登录失败</b>：用户名：{result['username']}，服务器：{result['hostname']}，错误：{result['error']}\n"
 
 beijing_timezone = timezone(timedelta(hours=8))
 time = datetime.now(beijing_timezone).strftime('%Y-%m-%d %H:%M:%S')
@@ -53,7 +53,7 @@ try:
 except:
     loginip = "未知"
 
-content += f"\n本次登录成功用户共： {success_count} 个\n登录时间：{time}\n登录IP：{loginip}"
+content += f"\n<b>本次登录成功用户共：</b> {success_count} 个\n<b>登录时间：</b>{time}\n<b>登录IP：</b>{loginip}"
 
 push = os.getenv('PUSH')
 
